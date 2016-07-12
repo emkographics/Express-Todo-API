@@ -1,9 +1,9 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
-
 var app = express();
 var PORT = process.env.PORT || 3002;
+
 var todos = [];
 var todoNextId = 1;
 
@@ -14,17 +14,27 @@ app.get('/', function(req, res){
 	res.send('ToDo API Root');
 });
 
-// GET /todos or /todos?completed=true
+// GET /todos or /todos?completed=true?q=walk
 app.get('/todos', function(req, res){
+	// grabs the query parameters from the url
 	var queryParams = req.query;
+	// assign array to a new variable
 	var filteredTodos = todos;
-
+  // filter by completed tasks
 	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true'){
 		filteredTodos = _.where(filteredTodos, {completed: true});
-	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false'){
+	}
+	// filter by incompleted tasks
+	else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false'){
 		filteredTodos = _.where(filteredTodos, {completed: false});
 	}
 
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+		filteredTodos = _.filter(filteredTodos, function(todo) {
+			return todo.description.toLowerCase().indexOf(queryParams.q) > -1;
+		});
+	};
+  // return tasks
 	res.json(filteredTodos);
 });
 
