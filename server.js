@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var bcrypt = require('bcrypt');
 
 // require data object
 var db = require('./db.js');
@@ -136,7 +137,7 @@ app.put('/todos/:id', function(req, res) {
   });
 });
 
-// POST /todos
+// POST /users
 app.post('/users', function(req, res) {
   // allow only defined properties
   var body = _.pick(req.body, 'email', 'password');
@@ -148,13 +149,24 @@ app.post('/users', function(req, res) {
   body.email = body.email.trim();
   // increment to next id
   db.user.create(body).then(function(user) {
-    res.json(user.toJSON());
+    res.json(user.toPublicJSON());
   }, function(e) {
     res.status(400).json(e);
   });
 });
 
-db.sequelize.sync().then(function() {
+//POST users/login
+app.post('/users/login', function(req, res) {
+  var body = _.pick(req.body, 'email', 'password');
+
+  db.user.authenticate(body).then(function (user){
+    res.json(user.toPublicJSON());
+  }, function () {
+      res.status(401).send();
+  });
+});
+
+db.sequelize.sync({ force: true }).then(function() {
   app.listen(PORT, function() {
     console.log('Express listening on port: ' + PORT);
   });
