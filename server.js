@@ -136,6 +136,24 @@ app.put('/todos/:id', function(req, res) {
   });
 });
 
+// POST /todos
+app.post('/users', function(req, res) {
+  // allow only defined properties
+  var body = _.pick(req.body, 'email', 'password');
+  // validate data types and empty strings
+  if (!_.isString(body.email) || body.email.trim().length === 0 || !_.isString(body.password) || body.password.trim().length < 6) {
+    return res.status(400).send();
+  }
+  // trim white spaces
+  body.email = body.email.trim();
+  // increment to next id
+  db.user.create(body).then(function(user) {
+    res.json(user.toJSON());
+  }, function(e) {
+    res.status(400).json(e);
+  });
+});
+
 db.sequelize.sync().then(function() {
   app.listen(PORT, function() {
     console.log('Express listening on port: ' + PORT);
