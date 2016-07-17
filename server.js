@@ -1,10 +1,9 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
-var bcrypt = require('bcrypt');
-
-// require data object
 var db = require('./db.js');
+var bcrypt = require('bcrypt');
+var middleware = require('./middleware.js')(db);
 
 var app = express();
 var PORT = process.env.PORT || 3002;
@@ -20,7 +19,7 @@ app.get('/', function(req, res) {
 });
 
 // GET /todos or /todos?completed=true?q=walk
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication, function(req, res) {
   // grabs the query parameters from the url
   var queryParams = req.query;
   // create blank filter object
@@ -50,7 +49,7 @@ app.get('/todos', function(req, res) {
 });
 
 // GET /todos/:id (req.params.id)
-app.get('/todos/:id', function(req, res) {
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
   // sets parameter to int
   var todoId = parseInt(req.params.id, 10);
   // find item by id
@@ -66,7 +65,7 @@ app.get('/todos/:id', function(req, res) {
 });
 
 // POST /todos
-app.post('/todos', function(req, res) {
+app.post('/todos', middleware.requireAuthentication, function(req, res) {
   // allow only defined properties
   var body = _.pick(req.body, 'description', 'completed');
   // validate data types and empty strings
@@ -84,7 +83,7 @@ app.post('/todos', function(req, res) {
 });
 
 // DELETE /todos/:id
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
   // sets parameter to int
   var todoId = parseInt(req.params.id, 10);
 
