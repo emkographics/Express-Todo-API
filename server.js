@@ -110,35 +110,30 @@ app.put('/todos/:id', function(req, res) {
   var todoId = parseInt(req.params.id, 10);
   // allow only defined properties
   var body = _.pick(req.body, 'description', 'completed');
+  var attributes = {};
 
+  if (body.hasOwnProperty('completed')) {
+    attributes.completed = body.completed;
+  }
+
+  if (body.hasOwnProperty('description')) {
+    attributes.description = body.description;
+  }
+
+  // call a model method
   db.todo.findById(todoId).then(function(todo) {
-    if (!!todo) {
-      if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-        todo.updateAttributes({
-          completed: body.completed
-        }).then(function(to) {
-          res.json(to);
-        });
-      } else if (body.hasOwnProperty('completed')) {
-        return res.status(400).send();
-      }
-      // validate if description exists
-      if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-        todo.updateAttributes({
-          description: body.description
-        }).then(function(to) {
-          res.json(to);
-        });
-      } else if (body.hasOwnProperty('description')) {
-        return res.status(400).send();
-      }
+    if (todo) {
+      todo.update(attributes).then(function(todo) {
+        res.json(todo.toJSON());
+      }, function(e) {
+        res.status(400).json(e);
+      });
     } else {
       res.status(404).send();
     }
-  }, function(e) {
+  }, function() {
     res.status(500).send();
   });
-
 });
 
 db.sequelize.sync().then(function() {
